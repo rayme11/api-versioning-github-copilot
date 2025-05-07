@@ -8,7 +8,7 @@ async def say_hello():
 
 
 @router.get("/joke")
-async def say_hello():
+async def say_joke():
     return {"message": "This is a joke endpoint - running on /joke"}
 @router.get("/goodbye")
 async def say_goodbye():
