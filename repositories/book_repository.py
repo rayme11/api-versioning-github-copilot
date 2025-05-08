@@ -13,6 +13,8 @@ class BookRepository:
         self.collection = self.db["books"]
 
     def create_book(self, book: Book) -> str:
+        if book is None:
+            raise ValueError("Book cannot be None")  # Add validation for None
         try:
             book_data = book.dict()
             result = self.collection.insert_one(book_data)
@@ -51,7 +53,7 @@ class BookRepository:
     def get_all_books(self) -> List[Book]:
         try:
             books = self.collection.find({"status": {"$ne": "INACTIVE"}})
-            return [Book(**book) for book in books]
+            return [Book(**book, exclude_unset=True) for book in books]  # Handle missing fields
         except ValidationError as e:
             raise ValueError(f"Invalid book data retrieved from database: {e}")
         except PyMongoError as e:
@@ -62,7 +64,7 @@ class BookRepository:
             raise ValueError("Invalid book ID format")
         try:
             book = self.collection.find_one({"_id": ObjectId(book_id), "status": {"$ne": "INACTIVE"}})
-            return Book(**book) if book else None
+            return Book(**book, exclude_unset=True) if book else None  # Handle missing fields
         except ValidationError as e:
             raise ValueError(f"Invalid book data retrieved from database: {e}")
         except PyMongoError as e:

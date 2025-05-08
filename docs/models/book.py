@@ -1,25 +1,38 @@
-from pydantic import BaseModel, Field, constr
+from pydantic import BaseModel, Field, constr, field_validator
 from typing import List, Dict, Optional
 from datetime import datetime
+import re
 
 class Book(BaseModel):
     title: constr(strip_whitespace=True, min_length=1) = Field(..., description="The title of the book")
     author: constr(strip_whitespace=True, min_length=1) = Field(..., description="The author of the book")
     description: Optional[str] = Field(None, description="A brief description of the book")
-    language: constr(strip_whitespace=True, min_length=1) = Field(..., description="The language of the book")
+    language: Optional[str] = Field("Unknown", description="The language of the book")
     publisher: Optional[str] = Field(None, description="The publisher of the book")
     publisher_date: Optional[datetime] = Field(None, description="The publication date of the book")
-    isbn: constr(regex=r"^\d{10}(\d{3})?$") = Field(..., description="The ISBN of the book")
-    price: float = Field(..., ge=0, description="The price of the book")
-    status: constr(strip_whitespace=True, regex=r"^(PENDING|ACTIVE|INACTIVE)$") = Field(..., description="The status of the book")
+    isbn: Optional[str] = Field("0000000000", description="The ISBN of the book")
+    price: float = Field(0.0, ge=0, description="The price of the book")
+    status: str = Field(..., description="The status of the book")
     created_date: datetime = Field(default_factory=datetime.utcnow, description="The date the book was created")
     updated_date: Optional[datetime] = Field(None, description="The date the book was last updated")
     inactive_date: Optional[datetime] = Field(None, description="The date the book was marked as inactive")
     ratings_by_stars: Optional[Dict[int, int]] = Field(default_factory=dict, description="Ratings by stars (e.g., {1: 10, 2: 20})")
     number_of_reviews: int = Field(default=0, ge=0, description="The number of reviews for the book")
 
-    class model_config:  # Renamed from ModelConfig to model_config
-        schema_extra = {
+    @field_validator("isbn")
+    def validate_isbn(cls, value):
+        if not re.match(r"^\d{10}(\d{3})?$", value):
+            raise ValueError("ISBN must be a 10 or 13 digit number")
+        return value
+
+    @field_validator("status")
+    def validate_status(cls, value):
+        if not re.match(r"^(PENDING|ACTIVE|INACTIVE)$", value):
+            raise ValueError("Status must be one of: PENDING, ACTIVE, INACTIVE")
+        return value
+
+    model_config = {  # Changed from a class to a dictionary
+        "schema_extra": {
             "example": {
                 "title": "The Great Gatsby",
                 "author": "F. Scott Fitzgerald",
@@ -37,3 +50,4 @@ class Book(BaseModel):
                 "number_of_reviews": 100,
             }
         }
+    }
