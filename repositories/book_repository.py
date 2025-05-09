@@ -2,7 +2,7 @@ from typing import Optional, List
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timezone
 from docs.models.book import Book
 from pydantic import ValidationError
 
@@ -14,9 +14,9 @@ class BookRepository:
 
     def create_book(self, book: Book) -> str:
         if book is None:
-            raise ValueError("Book cannot be None")  # Add validation for None
+            raise ValueError("Book cannot be None")
         try:
-            book_data = book.dict()
+            book_data = book.model_dump()  # Updated from dict to model_dump
             result = self.collection.insert_one(book_data)
             return str(result.inserted_id)
         except ValidationError as e:
@@ -30,7 +30,7 @@ class BookRepository:
         try:
             result = self.collection.update_one(
                 {"_id": ObjectId(book_id)},
-                {"$set": book.dict(exclude_unset=True), "$currentDate": {"updated_date": True}}
+                {"$set": book.model_dump(exclude_unset=True), "$currentDate": {"updated_date": True}}  # Updated from dict to model_dump
             )
             return result.modified_count > 0
         except ValidationError as e:
@@ -44,7 +44,7 @@ class BookRepository:
         try:
             result = self.collection.update_one(
                 {"_id": ObjectId(book_id)},
-                {"$set": {"status": "INACTIVE", "inactive_date": datetime.utcnow()}}
+                {"$set": {"status": "INACTIVE", "inactive_date": datetime.now(timezone.utc)}}  # Updated to use timezone-aware datetime
             )
             return result.modified_count > 0
         except PyMongoError as e:

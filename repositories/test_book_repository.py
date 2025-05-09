@@ -1,7 +1,7 @@
 import pytest
 from pymongo.errors import PyMongoError
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 from docs.models.book import Book
 from repositories.book_repository import BookRepository
@@ -19,7 +19,7 @@ def test_create_book(mock_book_repository):
         description="Test Description",
         language="English",
         publisher="Test Publisher",
-        publisher_date=datetime.utcnow(),
+        publisher_date=datetime.now(timezone.utc),
         isbn="1234567890123",
         price=19.99,
         status="ACTIVE"
@@ -36,7 +36,7 @@ def test_update_book(mock_book_repository):
         description="Updated Description",
         language="English",
         publisher="Updated Publisher",
-        publisher_date=datetime.utcnow(),
+        publisher_date=datetime.now(timezone.utc),
         isbn="1234567890123",
         price=29.99,
         status="ACTIVE"
@@ -58,14 +58,14 @@ def test_get_all_books(mock_book_repository):
             "title": "Book 1",
             "author": "Author 1",
             "status": "ACTIVE",
-            "created_date": datetime.utcnow()
+            "created_date": datetime.now(timezone.utc)
         },
         {
             "_id": ObjectId(),
             "title": "Book 2",
             "author": "Author 2",
             "status": "ACTIVE",
-            "created_date": datetime.utcnow()
+            "created_date": datetime.now(timezone.utc)
         }
     ]
     result = mock_book_repository.get_all_books()
@@ -79,7 +79,7 @@ def test_get_one_book(mock_book_repository):
         "title": "Book 1",
         "author": "Author 1",
         "status": "ACTIVE",
-        "created_date": datetime.utcnow()
+        "created_date": datetime.now(timezone.utc)
     }
     result = mock_book_repository.get_one_book(book_id)
     assert result is not None
