@@ -31,7 +31,7 @@ class Book(BaseModel):
             raise ValueError("Status must be one of: PENDING, ACTIVE, INACTIVE")
         return value
 
-    model_config = {  # Updated to use json_schema_extra
+    model_config = {
         "json_schema_extra": {
             "example": {
                 "title": "The Great Gatsby",
@@ -49,5 +49,8 @@ class Book(BaseModel):
                 "ratings_by_stars": {1: 5, 2: 10, 3: 15, 4: 20, 5: 50},
                 "number_of_reviews": 100,
             }
+        },
+        "json_encoders": {
+            datetime: lambda v: v.isoformat()
         }
     }

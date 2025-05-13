@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException  # Added APIRouter import
+from fastapi import APIRouter, Depends, HTTPException
 from typing import List
 from bson import ObjectId
 from docs.models.book import Book
@@ -13,11 +13,12 @@ async def create_book(book: Book, book_service: BookService = Depends(get_book_s
     Create a new book.
     """
     try:
-        return await book_service.create_book(book)
+        result = await book_service.create_book(book)
+        return result
     except InvalidBookDataError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Failed to create book.")
+        raise HTTPException(status_code=500, detail=f"Failed to create book: {str(e)}")
 
 @router.get("/", response_model=List[Book])
 async def get_books(book_service: BookService = Depends(get_book_service)):
@@ -56,3 +57,15 @@ async def update_book(book_id: str, book: Book, book_service: BookService = Depe
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail="Failed to update book.")
+
+@router.delete("/{book_id}", response_model=bool)
+async def delete_book(book_id: str, book_service: BookService = Depends(get_book_service)):
+    """
+    Soft delete a book by its ID.
+    """
+    try:
+        return await book_service.soft_delete_book(book_id)
+    except BookNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to delete book.")
